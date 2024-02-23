@@ -284,6 +284,55 @@ llm:
 
 </CodeGroup>
 
+
+## Clarifai
+
+Install related dependencies using the following command:
+
+```bash
+pip install --upgrade 'embedchain[clarifai]'
+```
+
+set the `CLARIFAI_PAT` as environment variable which you can find in the [security page](https://clarifai.com/settings/security). Optionally you can also pass the PAT key as parameters in LLM/Embedder class.
+
+Now you are all set with exploring Embedchain.
+
+<CodeGroup>
+
+```python main.py
+import os
+from embedchain import App
+
+os.environ["CLARIFAI_PAT"] = "XXX"
+
+# load llm configuration from config.yaml file
+app = App.from_config(config_path="config.yaml")
+
+#Now let's add some data.
+app.add("https://www.forbes.com/profile/elon-musk")
+
+#Query the app
+response = app.query("what college degrees does elon musk have?")
+```
+
+For passing model inference parameters use `model_kwargs` argument in the config file. Also you can use `api_key` argument to pass `CLARIFAI_PAT` in the config.
+```yaml config.yaml
+llm:
+ provider: clarifai
+ config:
+   model: "https://clarifai.com/mistralai/completion/models/mistral-7B-Instruct"
+   model_kwargs:
+     temperature: 0.5
+     max_tokens: 1000  
+			
+embedder:
+ provider: clarifai
+ config:
+   model: "https://clarifai.com/clarifai/main/models/BAAI-bge-base-en-v15"
+```
+</CodeGroup>
+
+
 ## Together
 
 Install related dependencies using the following command:
