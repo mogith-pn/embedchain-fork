@@ -6,6 +6,7 @@ from embedchain.embedder.base import BaseEmbedder
 
 from chromadb import EmbeddingFunction, Embeddings
 
+
 class ClarifaiEmbeddingFunction(EmbeddingFunction):
     def __init__(self, config: BaseEmbedderConfig) -> None:
         super().__init__()
@@ -23,30 +24,29 @@ class ClarifaiEmbeddingFunction(EmbeddingFunction):
         self.model_obj = Model(url=self.model, pat=self.api_key)
         self.input_obj = Inputs(pat=self.api_key)
 
-    def __call__(self, input: Union[str, list[str]])-> Embeddings:
-        
-        if isinstance (input, str):
+    def __call__(self, input: Union[str, list[str]]) -> Embeddings:
+        if isinstance(input, str):
             text = [input]
-        
+
         batch_size = 32
         embeddings = []
-        for i in range(0, len(input), batch_size):
-            
-            batch = input[i : i + batch_size]
-            input_batch = [
-                    self.input_obj.get_text_input(input_id=str(id), raw_text=inp)
-                    for id, inp in enumerate(batch)
+        try:
+            for i in range(0, len(input), batch_size):
+                batch = input[i : i + batch_size]
+                input_batch = [
+                    self.input_obj.get_text_input(input_id=str(id), raw_text=inp) for id, inp in enumerate(batch)
                 ]
-            response = self.model_obj.predict(input_batch)
-            embeddings.extend(
-                [list(output.data.embeddings[0].vector)
-                 for output in response.outputs]
-                )
+                response = self.model_obj.predict(input_batch)
+                embeddings.extend([list(output.data.embeddings[0].vector) for output in response.outputs])
+        except Exception as e:
+            logger.error(f"Predict failed, exception: {e}")
+
         return embeddings
-    
+
+
 class ClarifaiEmbedder(BaseEmbedder):
     def __init__(self, config: Optional[BaseEmbedderConfig] = None):
         super().__init__(config)
-        
+
         embedding_func = ClarifaiEmbeddingFunction(config=self.config)
         self.set_embedding_fn(embedding_fn=embedding_func)
